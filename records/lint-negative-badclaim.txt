@@ -1,0 +1,7 @@
+== INFO ==
+  wiki: 來源 6、概念頁 10、claim 60
+  簡報: 18 頁；使用 55 條 claim；未被簡報使用 6 條：C15, C16, C21, C25, C82, C83
+== WARNINGS == 0
+== ERRORS == 1
+  S2 第 11 頁：引用不存在的 claim C99
+exit=1

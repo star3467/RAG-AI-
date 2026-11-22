@@ -1,0 +1,25 @@
+{
+ "console_errors": [],
+ "pageerrors": [],
+ "quiz_q2_wrong_marked": 1,
+ "quiz_q2_right_marked": 1,
+ "quiz_expl_shown": true
+}
+1 1 / 18 Wiki 對應：concepts/rag-definition.md　·　主張 C02 
+2 2 / 18 Wiki 對應：concepts/rag-definition.md、concepts/pipeline.md　·　主張 C02 C10 
+3 3 / 18 Wiki 對應：concepts/rag-definition.md　·　主張 C01 C05 C06 
+4 4 / 18 Wiki 對應：concepts/rag-definition.md　·　主張 C02 C03 C04 
+5 5 / 18 Wiki 對應：concepts/pipeline.md　·　主張 C10 C11 C12 C13 C14 
+6 6 / 18 Wiki 對應：concepts/chunking.md　·　主張 C20 C22 C23 C24 
+7 7 / 18 Wiki 對應：concepts/embeddings-vector-search.md　·　主張 C30 C31 C32 C33 
+8 8 / 18 Wiki 對應：concepts/hybrid-search-reranking.md　·　主張 C40 C41 C42 C43 C44 C45 
+9 9 / 18 Wiki 對應：concepts/contextual-retrieval.md　·　主張 C50 C51 
+10 10 / 18 Wiki 對應：concepts/contextual-retrieval.md　·　主張 C52 C53 C54 C55 C57 
+11 11 / 18 Wiki 對應：concepts/rag-vs-finetuning.md　·　主張 C80 C81 C82 C83 
+12 12 / 18 Wiki 對應：concepts/paradigms.md、concepts/agentic-rag.md　·　主張 C60 C61 C62 C63 C64 C65 C70 C71 C72 C73 
+13 13 / 18 Wiki 對應：concepts/agentic-rag.md、concepts/contextual-retrieval.md　·　主張 C74 C75 C76 C56 
+14 14 / 18 Wiki 對應：concepts/risks.md　·　主張 C90 C91 C92 C93 C94 C95 
+15 15 / 18 Wiki 對應：concepts/rag-definition.md、concepts/pipeline.md、concepts/hybrid-search-reranking.md、concepts/contextual-retrieval.md、concepts/risks.md　·　主張 C02 C10 C40 C50 C94 
+16 16 / 18 Wiki 對應：concepts/hybrid-search-reranking.md、concepts/contextual-retrieval.md、concepts/risks.md　·　主張 C40 C53 C94 
+17 17 / 18 None 
+18 18 / 18 None 

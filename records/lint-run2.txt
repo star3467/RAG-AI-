@@ -1,0 +1,6 @@
+== INFO ==
+  wiki: 來源 6、概念頁 10、claim 60
+  簡報: 18 頁；使用 56 條 claim；未被簡報使用 4 條：C15, C16, C21, C25
+== WARNINGS == 0
+== ERRORS == 0
+exit=0

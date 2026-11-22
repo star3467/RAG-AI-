@@ -1,0 +1,9 @@
+== INFO ==
+  wiki: 來源 6、概念頁 10、claim 60
+  簡報: 18 頁；使用 51 條 claim；未被簡報使用 9 條：C05, C13, C14, C15, C16, C21, C25, C70, C71
+== WARNINGS == 0
+== ERRORS == 2
+  W4 index 寫 claim 56 條，實際 60
+  S3 第 10 頁：數字「25
+
+」在 wiki 找不到

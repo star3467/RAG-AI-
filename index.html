@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG 是什麼？教學簡報</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#1c2333; --muted:#5b6475; --line:#dcd9d0;
+    --accent:#2b5bd7; --accent-soft:#e4ebfb; --warm:#c97a1f; --warm-soft:#fbeedb;
+    --good:#1f8a5b; --bad:#b83c3c; --bad-soft:#f9e4e4; --good-soft:#dff3ea;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14171f; --card:#1d222d; --ink:#eceff6; --muted:#a2aabb; --line:#343b4b;
+      --accent:#7aa2ff; --accent-soft:#222c47; --warm:#f0a24d; --warm-soft:#3a2d1b;
+      --good:#58c896; --bad:#ef8585; --bad-soft:#3b2326; --good-soft:#1c3a2e;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+    line-height:1.6;overflow:hidden}
+  .deck{position:relative;height:100%}
+  .slide{position:absolute;inset:0;padding:clamp(20px,4.5vh,56px) clamp(20px,6vw,96px) clamp(64px,9vh,88px);
+    display:none;flex-direction:column;overflow-y:auto}
+  .slide.active{display:flex}
+  .slide > .inner{margin:auto 0;width:100%;max-width:1100px;align-self:center}
+  h1{font-size:clamp(30px,5.4vw,58px);line-height:1.2;margin:.2em 0 .3em;letter-spacing:.01em}
+  h2{font-size:clamp(24px,3.6vw,40px);line-height:1.25;margin:0 0 .6em}
+  h2 small{display:block;font-size:.42em;font-weight:500;color:var(--accent);letter-spacing:.12em;margin-bottom:.4em}
+  p{margin:.4em 0}
+  ul{padding-left:1.2em;margin:.4em 0}
+  li{margin:.35em 0}
+  .lead{font-size:clamp(17px,2.2vw,24px);color:var(--muted)}
+  .big{font-size:clamp(20px,2.6vw,30px)}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .card h3{margin:0 0 .3em;font-size:1.05em}
+  .tag{display:inline-block;font-size:.78em;padding:2px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .tag.warm{background:var(--warm-soft);color:var(--warm)}
+  .tag.bad{background:var(--bad-soft);color:var(--bad)}
+  .tag.good{background:var(--good-soft);color:var(--good)}
+  .note{border-left:4px solid var(--warm);background:var(--warm-soft);padding:10px 14px;border-radius:0 10px 10px 0;margin-top:14px;font-size:.95em}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+  .node{background:var(--card);border:1.5px solid var(--accent);color:var(--ink);border-radius:10px;padding:8px 14px;font-weight:600;font-size:.95em}
+  .node.alt{border-color:var(--warm)}
+  .arrow{color:var(--muted);font-weight:700}
+  .phase{font-size:.85em;color:var(--muted);font-weight:700;letter-spacing:.08em;margin-top:14px}
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;font-size:.95em}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent)}
+  .ladder{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:14px 0}
+  .step{flex:1 1 150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .step b{display:block;color:var(--accent)}
+  .step.last{border-color:var(--warm);background:var(--warm-soft)}
+  .quiz .q{margin-bottom:14px}
+  .opt{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;margin:6px 0;cursor:pointer}
+  .opt:hover{border-color:var(--accent)}
+  .opt.right{border-color:var(--good);background:var(--good-soft)}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+  .expl{display:none;font-size:.92em;color:var(--muted);margin:4px 2px 0}
+  .expl.show{display:block}
+  .bar-label{fill:var(--ink);font-size:15px}
+  .bar-val{fill:var(--ink);font-size:16px;font-weight:700}
+  .bar-sub{fill:var(--muted);font-size:13px}
+  .src li{margin:.5em 0;font-size:.95em}
+  a{color:var(--accent)}
+  .src-foot{flex-shrink:0;width:100%;max-width:1100px;align-self:center;margin-top:12px;
+    font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}
+  .quiz h2{margin-bottom:.3em}
+  .quiz .q{margin-bottom:8px}
+  .quiz .q p{margin:.2em 0}
+  .quiz .opt{padding:5px 12px;margin:3px 0;font-size:.95em}
+  .quiz .expl{margin:2px 2px 0}
+  .src-foot b{color:var(--accent)}
+  .bar{position:fixed;left:0;right:0;bottom:0;height:34px;display:flex;align-items:center;gap:10px;
+    padding:0 clamp(12px,3vw,32px);background:var(--card);border-top:1px solid var(--line);font-size:13px;color:var(--muted);z-index:5}
+  .bar .prog{flex:1;height:5px;background:var(--line);border-radius:9px;overflow:hidden}
+  .bar .prog i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+  .bar button{font:inherit;background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:2px 12px;cursor:pointer}
+  .bar button:hover{border-color:var(--accent)}
+  .kbd{font-size:12px}
+  @media print{
+    body{overflow:visible}.slide{display:flex!important;position:relative;min-height:100vh;page-break-after:always}
+    .bar{display:none}
+  }
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+
+<!-- 1 封面 -->
+<section class="slide" data-nonum data-claims="C02" data-wiki="rag-definition">
+  <div class="inner">
+    <span class="tag">教學簡報 · 給第一次接觸的人</span>
+    <h1>RAG 是什麼？<br>讓 AI「先查資料，再回答」</h1>
+    <p class="lead">從「AI 為什麼會亂答」出發，一步一步看懂檢索增強生成（Retrieval-Augmented Generation）。</p>
+    <p class="lead" style="font-size:.95em">知識來源：自建的 RAG LLM Wiki（6 篇來源）　·　2026-11-23　·　按 → 或空白鍵翻頁</p>
+  </div>
+</section>
+
+<!-- 2 路線圖 -->
+<section class="slide" data-claims="C02,C10" data-wiki="rag-definition,pipeline">
+  <div class="inner">
+    <h2><small>ROADMAP</small>今天要回答五個問題</h2>
+    <div class="grid g3">
+      <div class="card"><h3>① 為什麼需要？</h3><p>AI 為什麼會答錯，RAG 想解決什麼。</p></div>
+      <div class="card"><h3>② 怎麼運作？</h3><p>從文件到答案的兩個階段。</p></div>
+      <div class="card"><h3>③ 怎麼找得準？</h3><p>切塊、向量、關鍵字、重排序。</p></div>
+      <div class="card"><h3>④ 怎麼更進階？</h3><p>Contextual Retrieval 與 Agentic RAG。</p></div>
+      <div class="card"><h3>⑤ 要注意什麼？</h3><p>成本、時機與資安風險。</p></div>
+    </div>
+    <p class="lead" style="margin-top:18px">學完之後，你可以用自己的話向朋友解釋 RAG，並判斷什麼情況該用它。</p>
+  </div>
+</section>
+
+<!-- 3 問題 -->
+<section class="slide" data-claims="C01,C05,C06" data-wiki="rag-definition">
+  <div class="inner">
+    <h2><small>WHY</small>AI 為什麼會「很有自信地答錯」？</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>① 知識停在訓練那一天</h3>
+        <p>模型只靠訓練資料回答。遇到新資訊或冷門領域，內容可能已經過時。</p>
+      </div>
+      <div class="card">
+        <h3>② 不知道時會「編」</h3>
+        <p>語言模型能寫出很流暢的句子，但流暢不代表正確，這種現象叫<b>幻覺</b>。</p>
+      </div>
+    </div>
+    <div class="note"><b>三個實務痛點：</b>會產生幻覺　·　知識更新慢　·　答案不透明（看不出依據是什麼）。RAG 就是針對這些痛點而生。</div>
+    <p style="margin-top:12px"><b>RAG 的三項好處：</b>有依據（答案連到可查證的資料，降低幻覺）　·　可擴展（換知識庫就能換領域）　·　成本較低（不必為每次知識變動重新微調）。</p>
+  </div>
+</section>
+
+<!-- 4 定義 -->
+<section class="slide" data-claims="C02,C03,C04" data-wiki="rag-definition">
+  <div class="inner">
+    <h2><small>WHAT</small>RAG：先查資料，再回答</h2>
+    <p class="big">回答之前，先從外部知識庫找出相關資料，<b>附進提示詞</b>，再讓語言模型根據它們生成答案。</p>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <span class="tag warm">比喻</span>
+        <p>就像把「閉書考試」改成「開書考試」：考生（LLM）遇到題目，先翻參考書（知識庫），再寫答案。<br><small>（比喻，非來源）</small></p>
+      </div>
+      <div class="card">
+        <span class="tag">兩種記憶</span>
+        <p><b>參數記憶</b>：存在模型權重裡的知識。<br><b>非參數記憶</b>：放在外部、可直接修改的索引。<br>換掉外部索引就能更新知識，不用重新訓練。</p>
+      </div>
+    </div>
+    <p style="margin-top:12px;color:var(--muted)">「RAG」這個名稱來自 2020 年 Lewis 等人的論文。</p>
+  </div>
+</section>
+
+<!-- 5 流程 -->
+<section class="slide" data-claims="C10,C11,C12,C13,C14" data-wiki="pipeline">
+  <div class="inner">
+    <h2><small>HOW</small>RAG 的兩個階段</h2>
+    <div class="phase">階段一：離線建立索引（事先做好）</div>
+    <div class="flow">
+      <span class="node">文件</span><span class="arrow">→</span>
+      <span class="node">切塊</span><span class="arrow">→</span>
+      <span class="node">轉成嵌入向量</span><span class="arrow">→</span>
+      <span class="node">存進向量資料庫</span>
+    </div>
+    <div class="phase">階段二：線上回答（每次提問都會跑）</div>
+    <div class="flow">
+      <span class="node alt">問題</span><span class="arrow">→</span>
+      <span class="node alt">轉成向量</span><span class="arrow">→</span>
+      <span class="node alt">相似度搜尋</span><span class="arrow">→</span>
+      <span class="node alt">取前 k 筆</span><span class="arrow">→</span>
+      <span class="node alt">附進提示詞</span><span class="arrow">→</span>
+      <span class="node alt">LLM 生成答案</span>
+    </div>
+    <div class="note"><b>關鍵規則：</b>問題和文件要用<b>同一個嵌入模型</b>轉成向量，兩邊才能互相比較。</div>
+    <p style="color:var(--muted);font-size:.92em">還有兩點：錯誤會一路往下傳（嵌入差 → 檢索差 → 答案差）；附進提示詞的內容受上下文窗口限制，太多就得截斷，要在細節與篇幅之間取捨。</p>
+  </div>
+</section>
+
+<!-- 6 切塊 -->
+<section class="slide" data-claims="C20,C22,C23,C24" data-wiki="chunking">
+  <div class="inner">
+    <h2><small>STEP 1</small>切塊：把長文件切成可檢索的小單位</h2>
+    <p>每一塊都可以單獨被索引、嵌入與檢索。但「切多大」有拉扯：</p>
+    <div class="grid g2">
+      <div class="card"><h3>小塊（約 100–256 token）</h3><p>有利於精準比對。</p></div>
+      <div class="card"><h3>大塊（約 1024 token 以上）</h3><p>能給 LLM 比較完整的上下文。</p></div>
+    </div>
+    <p style="margin-top:12px"><span class="tag warm">常見做法，非最佳值</span> 多數情況用 300–500 token 的塊，相鄰塊重疊 10–20%。</p>
+    <p>常見切法：固定長度 · 遞迴（依段落／句子逐層切）· 語意切塊 · 保留文件結構。</p>
+  </div>
+</section>
+
+<!-- 7 嵌入 -->
+<section class="slide" data-claims="C30,C31,C32,C33" data-wiki="embeddings-vector-search">
+  <div class="inner">
+    <h2><small>STEP 2</small>嵌入與向量搜尋：用「意思」找資料</h2>
+    <div class="grid g2">
+      <div>
+        <ul>
+          <li><b>嵌入</b>：把文字轉成一串數字（向量）；意思相近，距離就近。</li>
+          <li><b>相似度</b>：文字檢索最常用 cosine 相似度。</li>
+          <li><b>向量資料庫</b>：專門存向量並快速找最近的；資料量大時用近似最近鄰（ANN）加速。</li>
+          <li><b>取前 k 筆</b>：經驗上 k 為 3–5 適合聚焦的問題，10–20 適合較廣的問題。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <svg viewBox="0 0 320 220" role="img" aria-label="向量空間示意圖：問題附近聚集了語意相近的文件塊">
+          <rect x="1" y="1" width="318" height="218" rx="12" fill="none" stroke="var(--line)"/>
+          <circle cx="110" cy="80" r="62" fill="var(--accent-soft)" stroke="var(--accent)" stroke-dasharray="4 4"/>
+          <circle cx="90" cy="60" r="6" fill="var(--accent)"/><circle cx="125" cy="95" r="6" fill="var(--accent)"/><circle cx="75" cy="100" r="6" fill="var(--accent)"/>
+          <circle cx="240" cy="160" r="6" fill="var(--muted)"/><circle cx="270" cy="60" r="6" fill="var(--muted)"/><circle cx="200" cy="190" r="6" fill="var(--muted)"/><circle cx="40" cy="180" r="6" fill="var(--muted)"/>
+          <polygon points="105,78 109,88 120,88 111,94 114,105 105,98 96,105 99,94 90,88 101,88" fill="var(--warm)"/>
+          <text x="140" y="40" class="bar-sub">問題 ★ 附近的塊會被取出</text>
+          <text x="16" y="208" class="bar-sub">（示意圖，二維簡化）</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 混合搜尋 -->
+<section class="slide" data-claims="C40,C41,C42,C43,C44,C45" data-wiki="hybrid-search-reranking">
+  <div class="inner">
+    <h2><small>STEP 3</small>只靠語意不夠：混合搜尋與重排序</h2>
+    <div class="card">
+      <p><b>問題：</b>嵌入擅長抓語意，卻可能漏掉必須精確吻合的字串。<br>搜尋「Error code TS-999」時，可能找到一般的錯誤代碼說明，卻漏掉剛好寫 TS-999 的那份。</p>
+    </div>
+    <div class="ladder">
+      <div class="step"><b>BM25</b>以關鍵字比對為主的排序函式，建立在 TF-IDF 的概念上。</div>
+      <div class="step"><b>混合搜尋</b>BM25 與嵌入各找一批，用排名融合合併、去重。</div>
+      <div class="step last"><b>重排序</b>（Anthropic 實驗）先撈出前 150 塊，由重排序模型打分，再選前 20 塊給 LLM。</div>
+    </div>
+    <p style="color:var(--muted)">名詞：dense（稠密）＝依語意；sparse（稀疏）＝依關鍵字；reranking＝重新排序讓最相關的排前面。實驗結論：「嵌入＋BM25」優於只用嵌入。</p>
+  </div>
+</section>
+
+<!-- 9 情境 -->
+<section class="slide" data-claims="C50,C51" data-wiki="contextual-retrieval">
+  <div class="inner">
+    <h2><small>UPGRADE</small>切塊會丟掉上下文，怎麼辦？</h2>
+    <div class="grid g2">
+      <div class="card">
+        <span class="tag bad">傳統 RAG</span>
+        <p>某一塊只寫著：<br><b>「公司營收比上一季成長 3%」</b></p>
+        <p style="color:var(--muted)">哪家公司？哪一季？不知道，所以很難被對的問題找到。</p>
+      </div>
+      <div class="card">
+        <span class="tag good">Contextual Retrieval</span>
+        <p>用 LLM 替每一塊補上一小段背景說明：<br><b>「這一塊來自某公司某季財報……公司營收比上一季成長 3%」</b></p>
+        <p style="color:var(--muted)">（示意）背景說明通常 50–100 token，加在塊前面，再做嵌入並建立 BM25 索引。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 成效 -->
+<section class="slide" data-claims="C52,C53,C54,C55,C57" data-wiki="contextual-retrieval">
+  <div class="inner">
+    <h2><small>EVIDENCE</small>效果有多大？檢索失敗率逐步下降</h2>
+    <svg viewBox="0 0 760 300" role="img" aria-label="橫條圖：傳統 5.7%，加 Contextual Embeddings 3.7%，再加 Contextual BM25 2.9%，再加重排序 1.9%" style="width:100%;height:auto;max-height:40vh">
+      <g>
+        <text x="0" y="38" class="bar-label">傳統 RAG</text>
+        <rect x="230" y="18" width="410" height="30" rx="6" fill="var(--muted)" opacity=".55"/>
+        <text x="650" y="39" class="bar-val">5.7%</text>
+
+        <text x="0" y="104" class="bar-label">＋ Contextual Embeddings</text>
+        <rect x="230" y="84" width="266" height="30" rx="6" fill="var(--accent)" opacity=".6"/>
+        <text x="506" y="105" class="bar-val">3.7%</text><text x="560" y="105" class="bar-sub">降低 35%</text>
+
+        <text x="0" y="170" class="bar-label">＋ Contextual BM25</text>
+        <rect x="230" y="150" width="209" height="30" rx="6" fill="var(--accent)" opacity=".8"/>
+        <text x="449" y="171" class="bar-val">2.9%</text><text x="505" y="171" class="bar-sub">降低 49%</text>
+
+        <text x="0" y="236" class="bar-label">＋ 重排序</text>
+        <rect x="230" y="216" width="137" height="30" rx="6" fill="var(--accent)"/>
+        <text x="377" y="237" class="bar-val">1.9%</text><text x="432" y="237" class="bar-sub">降低 67%</text>
+      </g>
+    </svg>
+    <p style="color:var(--muted);font-size:.92em">指標是「1 − recall@20」：前 20 塊裡<b>沒撈到</b>相關內容的比例，越低越好。資料來自 Anthropic 的實驗報告。</p>
+    <div class="note"><b>讀圖提醒：</b>35%、49%、67% 是「失敗率的相對降低幅度」，不是「準確率提升幅度」。替每塊產生背景說明的一次性成本，Anthropic 估計約為每百萬個文件 token $1.02（搭配 prompt caching）。</div>
+  </div>
+</section>
+
+<!-- 11 比較 -->
+<section class="slide" data-claims="C80,C81,C82,C83" data-wiki="rag-vs-finetuning">
+  <div class="inner">
+    <h2><small>COMPARE</small>RAG、微調、提示工程有什麼不同？</h2>
+    <table>
+      <tr><th></th><th>做什麼</th><th>優點</th><th>限制</th></tr>
+      <tr><td><b>微調</b></td><td>用領域資料繼續訓練模型</td><td>專門任務表現好</td><td>成本高、要大量資料，知識變動要重做</td></tr>
+      <tr><td><b>提示工程</b></td><td>設計更好的指令</td><td>改風格與結構</td><td>無法替模型增加新知識</td></tr>
+      <tr><td><b>RAG</b></td><td>執行時取外部脈絡再附進提示詞</td><td>知識易更新、降低幻覺</td><td>取決於檢索品質與資料新鮮度</td></tr>
+    </table>
+    <p style="margin-top:12px">三者<b>不是互斥</b>：微調建立專業、提示工程調整互動、RAG 提供彈性與時效，可以搭配。</p>
+    <p style="color:var(--muted);font-size:.9em">⚠ 這張表的來源是單一產業科普文章，屬整理性論述。</p>
+  </div>
+</section>
+
+<!-- 12 演進 -->
+<section class="slide" data-claims="C60,C61,C62,C63,C64,C65,C70,C71,C72,C73" data-wiki="paradigms,agentic-rag">
+  <div class="inner">
+    <h2><small>EVOLUTION</small>RAG 的演進：從「查一次」到「會判斷」</h2>
+    <div class="ladder">
+      <div class="step"><b>Naive</b>檢索 → 閱讀，找到就用。</div>
+      <div class="step"><b>Advanced</b>稠密檢索、重排序、多跳檢索。</div>
+      <div class="step"><b>Modular</b>元件可替換，整合外部工具與 API。</div>
+      <div class="step"><b>Graph</b>用圖結構做關聯推理。</div>
+      <div class="step last"><b>Agentic</b>代理決定要不要檢索、怎麼改寫查詢、證據夠不夠。</div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>Corrective RAG</h3><p>先評估檢索到的文件是否相關；不夠就改寫查詢或改用網路搜尋補充。</p></div>
+      <div class="card"><h3>Adaptive RAG</h3><p>先判斷問題複雜度：不檢索、檢索一次，或多步檢索。</p></div>
+    </div>
+    <p style="color:var(--muted);font-size:.92em;margin-top:10px">為什麼要走向代理式？傳統流程固定、單向，不擅長邊查邊修正。代理常用四種模式：反思、規劃、工具使用、多代理協作。</p>
+  </div>
+</section>
+
+<!-- 13 不是越複雜越好 -->
+<section class="slide" data-claims="C74,C75,C76,C56" data-wiki="agentic-rag,contextual-retrieval">
+  <div class="inner">
+    <h2><small>CHOOSE</small>更複雜不等於更好</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Agentic 不是萬用預設</h3>
+        <p>會增加協調複雜度、延遲與運算成本；簡單查詢用模組化 RAG 通常就夠。</p>
+      </div>
+      <div class="card">
+        <h3>檢索品質仍是瓶頸</h3>
+        <p>代理式推理無法彌補一直很差的檢索，先把索引與檢索做好。</p>
+      </div>
+      <div class="card">
+        <h3>自主性需要邊界</h3>
+        <p>設定規劃步數上限、工具權限與停止條件。</p>
+      </div>
+      <div class="card">
+        <h3>小知識庫也許不需要 RAG</h3>
+        <p>Anthropic 指出：知識庫小於 200,000 token（約 500 頁）時，可以直接全部放進提示詞。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 風險 -->
+<section class="slide" data-claims="C90,C91,C92,C93,C94,C95" data-wiki="risks">
+  <div class="inner">
+    <h2><small>RISKS</small>RAG 帶來的新風險</h2>
+    <div class="grid g2">
+      <div class="card"><span class="tag bad">資料投毒</span><p>惡意或誤導內容被放進知識庫，被檢索到就會誤導答案。</p></div>
+      <div class="card"><span class="tag bad">提示注入</span><p>惡意指令藏在檢索回來的文字裡，可能蓋過原本的指令。</p></div>
+      <div class="card"><span class="tag bad">敏感資料外洩</span><p>私人資料可能被檢索或生成出來，需要存取控制與內容過濾。</p></div>
+      <div class="card"><span class="tag bad">外部 API 依賴</span><p>第三方服務出問題時，整個系統跟著受影響。</p></div>
+    </div>
+    <div class="note"><b>原則：</b>檢索回來的任何內容，在證明安全之前都視為不可信。維運上也要定期更新知識庫，避免回答過時內容。</div>
+  </div>
+</section>
+
+<!-- 15 回顧 -->
+<section class="slide" data-claims="C02,C10,C40,C50,C94" data-wiki="rag-definition,pipeline,hybrid-search-reranking,contextual-retrieval,risks">
+  <div class="inner">
+    <h2><small>RECAP</small>五句話帶走</h2>
+    <ol class="big">
+      <li><b>RAG</b> ＝ 先查資料，再讓 LLM 根據資料回答。</li>
+      <li>流程分兩階段：<b>離線建索引</b>、<b>線上檢索＋生成</b>。</li>
+      <li>只靠語意會漏掉精確字串，所以常用<b>混合搜尋＋重排序</b>。</li>
+      <li>切塊會丟上下文，<b>Contextual Retrieval</b> 為每塊補上背景。</li>
+      <li>檢索內容要當作<b>不可信輸入</b>來防護。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 16 小測驗 -->
+<section class="slide quiz" data-claims="C40,C53,C94" data-wiki="hybrid-search-reranking,contextual-retrieval,risks">
+  <div class="inner">
+    <h2><small>QUIZ</small>小測驗：點選答案看解析</h2>
+    <div class="q" data-answer="1">
+      <p><b>Q1.</b> 搜尋「Error code TS-999」時，只用嵌入搜尋可能出什麼問題？</p>
+      <button class="opt">A. 一定找不到任何文件</button>
+      <button class="opt">B. 找到一般的錯誤代碼說明，卻漏掉剛好寫 TS-999 的那份</button>
+      <button class="opt">C. 只會找到最舊的文件</button>
+      <div class="expl">嵌入抓的是語意，不保證精確字串一定被撈到。補上 BM25 這類關鍵字比對就能改善。（wiki：C40）</div>
+    </div>
+    <div class="q" data-answer="1">
+      <p><b>Q2.</b> 同時使用 Contextual Embeddings 與 Contextual BM25，檢索失敗率降低多少？</p>
+      <button class="opt">A. 35%</button>
+      <button class="opt">B. 49%</button>
+      <button class="opt">C. 67%</button>
+      <div class="expl">35% 是只用 Contextual Embeddings；49% 是再加 Contextual BM25；67% 是再加重排序。（wiki：C52–C54）</div>
+    </div>
+    <div class="q" data-answer="0">
+      <p><b>Q3.</b> 對於檢索回來的內容，比較安全的預設態度是？</p>
+      <button class="opt">A. 在證明安全之前都視為不可信</button>
+      <button class="opt">B. 因為是自己的知識庫，所以一律信任</button>
+      <button class="opt">C. 只要排名第一就可信</button>
+      <div class="expl">資料投毒與提示注入都可能藏在被檢索到的內容裡。（wiki：C94）</div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 製作流程 -->
+<section class="slide" data-nosrc="meta：說明本簡報如何由 wiki 產生，不含 wiki 主張" data-nonum>
+  <div class="inner">
+    <h2><small>BEHIND THE SLIDES</small>這份簡報是怎麼做出來的</h2>
+    <div class="flow">
+      <span class="node">取得資料</span><span class="arrow">→</span>
+      <span class="node">寫入 Wiki</span><span class="arrow">→</span>
+      <span class="node">擬定簡報大綱</span><span class="arrow">→</span>
+      <span class="node">產生簡報</span><span class="arrow">→</span>
+      <span class="node alt">腳本檢查</span><span class="arrow">→</span>
+      <span class="node alt">AI 審查</span><span class="arrow">→</span>
+      <span class="node alt">渲染檢查</span>
+    </div>
+    <ul>
+      <li>每一頁都標註對應的 wiki 頁面與主張編號（畫面下方的灰色小字）。</li>
+      <li>檢查腳本會確認：引用的編號存在、簡報裡的數字都能在 wiki 找到、比喻有標示。</li>
+      <li>AI 審查在全新對話中進行，只看成品和來源；檢查沒過就退回出錯的那一關，最多改 3 輪，不用自己的知識硬湊。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 18 參考來源 -->
+<section class="slide" data-nonum data-nosrc="meta：參考來源清單">
+  <div class="inner">
+    <h2><small>REFERENCES</small>參考來源（對應 wiki 的 S1–S6）</h2>
+    <ul class="src">
+      <li><b>S1</b>　Lewis et al., <i>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</i>（NeurIPS 2020）— <a data-ref-url="https://arxiv.org/abs/2005.11401" href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+      <li><b>S2</b>　Gao et al., <i>Retrieval-Augmented Generation for Large Language Models: A Survey</i> — <a data-ref-url="https://arxiv.org/abs/2312.10997" href="https://arxiv.org/abs/2312.10997" target="_blank" rel="noopener">arxiv.org/abs/2312.10997</a></li>
+      <li><b>S3</b>　Anthropic, <i>Introducing Contextual Retrieval</i> — <a data-ref-url="https://www.anthropic.com/research/contextual-retrieval" href="https://www.anthropic.com/research/contextual-retrieval" target="_blank" rel="noopener">anthropic.com/research/contextual-retrieval</a></li>
+      <li><b>S4</b>　Palo Alto Networks, <i>What Is Retrieval-Augmented Generation (RAG)?</i> — <a data-ref-url="https://www.paloaltonetworks.com/cyberpedia/what-is-retrieval-augmented-generation" href="https://www.paloaltonetworks.com/cyberpedia/what-is-retrieval-augmented-generation" target="_blank" rel="noopener">paloaltonetworks.com/cyberpedia/…</a></li>
+      <li><b>S5</b>　Singh et al., <i>Agentic Retrieval-Augmented Generation: A Survey on Agentic RAG</i> — <a data-ref-url="https://arxiv.org/abs/2501.09136" href="https://arxiv.org/abs/2501.09136" target="_blank" rel="noopener">arxiv.org/abs/2501.09136</a></li>
+      <li><b>S6</b>　DEV Community, <i>RAG Pipeline Deep Dive</i> — <a data-ref-url="https://dev.to/derrickryangiggs/rag-pipeline-deep-dive-ingestion-chunking-embedding-and-vector-search-2877" href="https://dev.to/derrickryangiggs/rag-pipeline-deep-dive-ingestion-chunking-embedding-and-vector-search-2877" target="_blank" rel="noopener">dev.to/derrickryangiggs/…</a></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<nav class="bar" aria-label="簡報導覽">
+  <button id="prev" aria-label="上一頁">←</button>
+  <div class="prog" aria-hidden="true"><i id="fill"></i></div>
+  <span id="count">1 / 1</span>
+  <button id="next" aria-label="下一頁">→</button>
+  <span class="kbd">← → 空白鍵　F 全螢幕</span>
+</nav>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var cur = 0, fill = document.getElementById('fill'), count = document.getElementById('count');
+
+  // 每頁底部自動標示 wiki 對應（由 data-claims / data-wiki 產生，避免手寫不一致）
+  slides.forEach(function(s){
+    var c = s.getAttribute('data-claims'), w = s.getAttribute('data-wiki');
+    if(!c && !w) return;
+    var f = document.createElement('div'); f.className = 'src-foot';
+    f.innerHTML = 'Wiki 對應：' + (w ? '<b>concepts/' + w.split(',').join('.md、concepts/') + '.md</b>' : '') +
+                  (c ? '　·　主張 ' + c.split(',').join(' ') : '');
+    s.appendChild(f);
+  });
+
+  function show(n){
+    if(n < 0 || n >= slides.length) return;
+    slides[cur].classList.remove('active');
+    cur = n; slides[cur].classList.add('active');
+    slides[cur].scrollTop = 0;
+    fill.style.width = ((cur + 1) / slides.length * 100) + '%';
+    count.textContent = (cur + 1) + ' / ' + slides.length;
+    try{ history.replaceState(null, '', '#' + (cur + 1)); }catch(e){}
+  }
+  document.getElementById('prev').onclick = function(){ show(cur - 1); };
+  document.getElementById('next').onclick = function(){ show(cur + 1); };
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ e.preventDefault(); show(cur + 1); }
+    else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); show(cur - 1); }
+    else if(e.key === 'Home'){ show(0); } else if(e.key === 'End'){ show(slides.length - 1); }
+    else if(e.key === 'f' || e.key === 'F'){
+      try{ if(document.fullscreenElement){ document.exitFullscreen(); } else { document.documentElement.requestFullscreen(); } }catch(err){}
+    }
+  });
+  var x0 = null;
+  document.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(x0 === null) return; var dx = e.changedTouches[0].clientX - x0;
+    if(Math.abs(dx) > 50){ show(cur + (dx < 0 ? 1 : -1)); } x0 = null;
+  }, {passive:true});
+
+  // 小測驗
+  Array.prototype.forEach.call(document.querySelectorAll('.quiz .q'), function(q){
+    var ans = parseInt(q.getAttribute('data-answer'), 10);
+    var opts = q.querySelectorAll('.opt'), ex = q.querySelector('.expl');
+    Array.prototype.forEach.call(opts, function(b, i){
+      b.addEventListener('click', function(){
+        Array.prototype.forEach.call(opts, function(o){ o.classList.remove('right','wrong'); });
+        b.classList.add(i === ans ? 'right' : 'wrong');
+        if(i !== ans){ opts[ans].classList.add('right'); }
+        ex.classList.add('show');
+      });
+    });
+  });
+
+  window.addEventListener('hashchange', function(){
+    var h = parseInt((location.hash || '').replace('#',''), 10);
+    if(!isNaN(h) && h - 1 !== cur){ show(Math.min(Math.max(h - 1, 0), slides.length - 1)); }
+  });
+  var start = parseInt((location.hash || '').replace('#',''), 10);
+  show(isNaN(start) ? 0 : Math.min(Math.max(start - 1, 0), slides.length - 1));
+})();
+</script>
+</body>
+</html>
